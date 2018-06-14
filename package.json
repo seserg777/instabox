@@ -5,7 +5,7 @@
   "main": "app.js",
   "repository" : { 
     "type" : "git", 
-    "url" : "https://github.com/seserg777/instabox"
+    "url" : "https://github.com/seserg777/instabox.git"
   }
   "scripts": {
     "start": "node app.js"
