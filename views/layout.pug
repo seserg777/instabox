@@ -33,26 +33,34 @@ html(lang='ru')
             .row
                 .col-md-2.d-none.d-md-block.bg-light.sidebar
                     .sidebar-sticky
-                      ul.nav.flex-column  
-                        li.nav-item 
-                            .form-inline
-                                .form-group.mb-2
+                        ul.nav.flex-column  
+                            li.nav-item 
+                                .input-group-sm
                                     label(for='watch-folder') Выбор папки
-                                    input(type='text', id='watch-folder', class='form-control-file')
-                                button(id='watch-folder-submit', class='btn btn-primary mb-2', onclick='startWatchFolder()') Наблюдать
-                        li.nav-item Кол-во фото в сете
-                        li.nav-item Кол-во повторов сета
+                                    input(type='text', id='watch-folder', class='form-control')
+                            li.nav-item 
+                                .input-group-sm
+                                    label(for='set-count') Кол-во фото в сете
+                                    input(type='text', id='set-count', class='form-control', value='48')
+                            li.nav-item 
+                                .input-group-sm
+                                    label(for='repeat-set-count') Кол-во повторов сета
+                                    input(type='text', id='repeat-set-count', class='form-control', value='2')
+                            li.nav-item
+                                button(id='watch-folder-submit', class='btn btn-primary', onclick='startWatchFolder()') Наблюдать
+                        .text-center.copy
+                            ul.float-md-left.list-inline
+                            li.list-inline-item © 2018 Instabox
+                            li.list-inline-item
+                                | Обратная связь:&nbsp;
+                                a(href='mailto:support@peak-systems.ru') support@peak-systems.ru
                 .col-md-9.ml-sm-auto.col-lg-10.px-4.content
-                    //include partials/flash
                     block content
                     .content
                         ul.gallery
-        include partials/footer
 
         script(src='//code.jquery.com/jquery-3.3.1.min.js', integrity='sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=', crossorigin='anonymous')
         script(src='/socket.io/socket.io.js')
         script(src='//vjs.zencdn.net/7.0.3/video.js')
         script(src='/js/script.js')
-
-        //block scripts
 

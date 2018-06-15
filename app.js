@@ -1,3 +1,4 @@
+//git push -f origin master
 const chokidar = require('chokidar');
 const fs = require('fs');
 const path = require('path');
@@ -58,12 +59,21 @@ global.appRoot = path.resolve(__dirname);;
 io.on('connection', function(socket) {
     console.log('a user connected');
 
-    let videos = fs.readdirSync('./public/video');
-    console.log(videos);
-    
+    /*let videos = fs.readdir('./public/video', function(err, items){
+        if(err){
+            console.log(err.message);
+        }
 
-    socket.on('startWatchFolder', function(watch_folder) {
+        for (var i in items) {
+            socket.emit('findVideos', path.join('./video/' + items[i]));
+        }
+    });*/
+
+    socket.on('startWatchFolder', function(watch_folder, set_count, repeat_set_count) {
         console.log('socket startWatchFolder');
+
+        global.set_count = set_count;
+        global.repeat_set_count = repeat_set_count;
 
         if (fs.existsSync(watch_folder)) {
             console.log('Folder exist');
@@ -71,73 +81,93 @@ io.on('connection', function(socket) {
             socket.emit('startWatchingFolder');
         
             try {
-                const watcher = chokidar.watch(watch_folder, {ignored: /[\//]\./, depth: 0, ignoreInitial: true, persistent: true});
+                const watcher = chokidar.watch(watch_folder, {ignored: /[\//]\./, depth: 0, disableGlobbing: false,usePolling: true,interval: 100,binaryInterval: 300,alwaysStat: false, ignoreInitial: true, persistent: true, ignorePermissionErrors: false, awaitWriteFinish: {
+                    stabilityThreshold: 2000,pollInterval: 100}});
                 
+                let watchChild = true;
+
                 watcher.on('ready', function() {
                     watcher.on('all', function (event, path) {
-                        //console.log(`Main event:${event}`);
-                        //console.log(`Main path:${path}`);
         
                         if(event === 'add' && foldersFamily(watch_folder, eventFolder) && watchChild){
                             console.log(`See for child`);
-        
-                            //fs.readdir(eventFolder, (err, files) => {
+
+                            watcher.unwatch(watch_folder);
+
                             try {
                                 let files = fs.readdirSync(eventFolder);
-                                //reader(eventFolder).then(files => {
-                                    console.log(`files.length:${files.length}`);
-                                    if(files.length >= 48){
-            
-                                        watcher.unwatch(eventFolder);
-                                        watchChild = false;
+                                console.log(`files.length:${files.length}`);
 
-                                        console.log('48  files YEah!!!');
+                                if(files.length >= set_count){
+                                    watchChild = false;
+                                    //watcher.unwatch(eventFolder);
+                                    console.log(`Was removes watching ${eventFolder}`);
 
-                                        /*const testPromise = new Promise((resolve, reject) => {
-                                            let test = Files.copyFolder(path.join(watch_folder), path.join(__dirname, 'tmp/' + Date.parse(new Date())));
+                                    console.log(`${set_count}  files YEah!!!`);
 
-                                            test.then(function(result){
-                                                resolve(result);
-                                            });
-                                        })
-                                        .then(function(result){
-                                            console.log(result);
-                                        });*/
+                                    const creatingVideoPromise = new Promise((resolve, reject) => {
+                                        console.log(`Start creatingVideoPromise`);
+                                        socket.emit('startCreatingVideo');
+                                        let video = Video.createMP4(eventFolder);
 
-                                        const creatingVideoPromise = new Promise((resolve, reject) => {
-                                            console.log(`Start creatingVideoPromise`);
-                                            socket.emit('startCreatingVideo');
-                                            let video = Video.createMP4(eventFolder);
-
-                                            video.then(function(result){
-                                                resolve(result);
-                                            });
+                                        video.then(function(result){
+                                            resolve(result);
                                         });
+                                    });
 
-                                        creatingVideoPromise.then(function(result){
-                                            console.log(`End creatingVideoPromise ${result}`);
-                                        })
-                                        .then(function(result){
-                                            //console.log(`116: ${eventFolder} | ${(__dirname + '/tmp/' + Date.parse(new Date()).toString())}`);
-                                            let copyFolder = Files.copyFolder(eventFolder, (__dirname + '/tmp/' + Date.parse(new Date())));
+                                    creatingVideoPromise.then(function(result){
+                                        console.log(`End creatingVideoPromise ${result}`);
+                                    })
+                                    .then(function(result){
+                                        let copyFolder = Files.copyFolder(eventFolder, (__dirname + '/tmp/' + Date.parse(new Date())));
+                                        
+                                        copyFolder.then(function(result){
+                                            console.log(`CopyFolder result = ${result}`);
+
+                                            socket.emit('endCreatingVideo', result);
                                             
-                                            copyFolder.then(function(result){
-                                                console.log(`copyFolder result = ${result}`);
+                                            /*let all_watching = watcher.getWatched();
+                                            for (var i in all_watching) {
+                                                console.log('--------------------------');
+                                                console.log(all_watching[i]);
+                                                watcher.unwatch(all_watching[i]);
+                                                console.log('--------------------------');
+                                            }*/
 
-                                                socket.emit('endCreatingVideo', result);
+                                            //console.log(watcher.getWatched());
 
-                                                rimraf(eventFolder, () => {
-                                                    console.log('folder was deleted');
+                                            //watcher.add(watch_folder);
+                                            //console.log(`Was added watching ${watch_folder}`);
+
+                                            //console.log('-----------Watch------------');
+                                            //console.log(watcher.getWatched());
+
+                                            //let delete_fles = 
+                                            try{
+                                                //Files.deleteFolderRecursive(eventFolder);
+                                                rimraf(eventFolder, function(){
+                                                    console.log('Folder was deleted');
+
+                                                    
                                                 });
+                                            } catch(err){
+                                                console.log(err.message);
+                                            }
 
-                                                watcher.add(watch_folder);
+                                            /*delete_fles.then(function(){
+                                                process.nextTick(function(){
+                                                    eventFolder = false;
+
+                                                    console.log('Old files was deleted');
+                                                    console.log('Start watching parent folder');
+                                                });
                                                 
-                                            });
+                                            });*/
+                                            
+                                            
                                         });
-
-                                        //return;
-                                    }
-                                //});
+                                    });
+                                }
                             } catch(err){
                                 console.log(err.message);
                             }
@@ -146,8 +176,6 @@ io.on('connection', function(socket) {
                         if(event === 'addDir'){
                             let type = whatIsIt(path);
                             console.log(`Was create ${type} ${path}. Start watching`);
-                            
-                            watchChild = true;
         
                             watcher.add(path);
                             watcher.unwatch(watch_folder);
@@ -159,7 +187,7 @@ io.on('connection', function(socket) {
                             console.log(`Need unlink`);
                             watcher.add(watch_folder);
         
-                            watchChild = false;
+                            watchChild = true;
                             eventFolder = false;
                         }
                     });

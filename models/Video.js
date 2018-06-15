@@ -9,39 +9,67 @@ const numberAs = (a,b) => {
     return a - b;
 }
 
+const splitRepeats = (src, dir) => {
+    //console.log(global.repeat_set_count);
+
+    let output = [];
+
+    for (var i in src) {
+        if(isImage(dir + '/' + src[i])){
+            src[i] = path.parse(src[i]).name;
+        } else {
+            src.splice(i);
+        }
+    }
+
+    src.sort(numberAs);
+
+    let files_reverse = src.slice(0);
+    files_reverse.reverse();
+
+    src.splice(-1,1);
+
+    src.push(...files_reverse);
+
+    for(i = 1; i <= global.repeat_set_count; i++){
+        //console.log(i);
+        //src.splice(-1,1);
+        output.push(...src);
+    }
+
+    //console.log(output);
+
+    return output;
+}
+
 const createMP4 = (dir) => {
     console.log(`start createMP4 ${dir}`);
 
     return reader(dir).then(list => {
         console.log('Start reader function');
-        //console.log(list);
-        let images = [];
 
-        for (var i in list) {
+        let shots = splitRepeats(list, dir);
+
+        let images = [];
+        
+        /*for (var i in list) {
             if(isImage(dir + '/' + list[i])){
-                //console.log(path.parse(list[i]).name)
                 list[i] = path.parse(list[i]).name;
             } else {
                 list.splice(i);
             }
         }
 
-        //console.log(list);
-
         list.sort(numberAs);
-
-        //console.log(list);
 
         let files_reverse = list.slice(0);
         files_reverse.reverse();
 
-        //console.log(list);
-
         list.splice(-1,1);
 
-        list.push(...files_reverse);
+        list.push(...files_reverse);*/
 
-        for (var i in list) {images.push({path:dir + '/' + list[i] + '.JPG'});}
+        for (var i in shots) {images.push({path:dir + '/' + shots[i] + '.JPG'});}
 
         const videoOptions = {
             fps: 24,
@@ -81,3 +109,4 @@ const createMP4 = (dir) => {
 }
 
 exports.createMP4 = createMP4;
+exports.splitRepeats = splitRepeats;

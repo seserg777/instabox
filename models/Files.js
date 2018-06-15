@@ -28,7 +28,7 @@ const copyFolder = (s, d) => {
             })
         })
         .then(function(result){
-            console.log(`copyFolder result = ${result}`);
+            //console.log(`copyFolder result = ${result}`);
             
             if (fs.existsSync(path.join(result, 'video.mp4'))) {
                 let movevideo = moveVideo(path.join(result, 'video.mp4'), path.join('./public/video/' + Date.parse(new Date()) + '.mp4'));
@@ -43,5 +43,24 @@ const copyFolder = (s, d) => {
     });
 }
 
+const deleteFolderRecursive = (path) => {
+    //return new Promise((resolve, reject) => {
+        if (fs.existsSync(path)) {
+            fs.readdirSync(path).forEach(function(file, index){
+                var curPath = path + "/" + file;
+                if (fs.lstatSync(curPath).isDirectory()) { // recurse
+                    deleteFolderRecursive(curPath);
+                } else { // delete file
+                    fs.unlinkSync(curPath);
+                }
+            });
+            fs.rmdirSync(path);
+            //console.log('Before resolve deleteFolderRecursive');
+            //resolve();
+        }
+    //});
+};
+
 exports.copyFolder = copyFolder;
 exports.moveVideo = moveVideo;
+exports.deleteFolderRecursive = deleteFolderRecursive;
